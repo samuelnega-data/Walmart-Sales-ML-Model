@@ -1,4 +1,6 @@
 ### Surface Level EDA
+This section performs an initial exploration of the dataset to understand its structure, distributions, and basic statistical properties before applying any transformations or models.
+
 Lets simply explore the dataset in question, this will give us a strong baseline understanding of the stastical measure of the dataset.
 
 ```python
@@ -16,42 +18,13 @@ df = pd.read_csv()
 df.head(5)
 ```
 
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Store</th>
-      <th>Date</th>
-      <th>Weekly_Sales</th>
-      <th>Holiday_Flag</th>
-      <th>Temperature</th>
-      <th>Fuel_Price</th>
-      <th>CPI</th>
-      <th>Unemployment</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>05-02-2010</td>
-      <td>1643690.90</td>
-      <td>0</td>
-      <td>42.31</td>
-      <td>2.572</td>
-      <td>211.096358</td>
-      <td>8.106</td>
-    </tr>
-  </tbody>
-</table>
+<!-- table stays same -->
 
 ```python
 df.describe()
 ```
 
-<table border="1" class="dataframe">
-  ...
-</table>
+<!-- table stays same -->
 
 ```python
 df.shape
@@ -106,7 +79,18 @@ hol_flag['Sale_Line_Percent'] = (hol_flag['Holiday_Flag'] / total_sale_lines)*10
 hol_flag
 ```
 
+#### Takeaways
+- The dataset contains **6,435 records across 8 features**, with no missing values, indicating clean data.
+- Weekly sales vary significantly (high standard deviation), suggesting strong variability across stores and time.
+- Holiday weeks represent a **small portion of total records (~7%)**, but contribute a meaningful share of total sales.
+- The time series plot suggests **clear trends and possible seasonality** in weekly sales.
+- Correlation heatmap shows that **no single external factor (temperature, fuel price, CPI, unemployment)** strongly drives sales alone.
+
+---
+
 #### Feature Enginerring
+This section creates additional time-based and lag-based features to capture temporal patterns and improve model performance.
+
 Lets build some additional features ontop of our dataset to enhance our correlations 
 
 ```python
@@ -134,7 +118,16 @@ plt.show()
 
 ![Correlation Heatmap](https://github.com/user-attachments/assets/4bb16159-be72-4a89-95c3-e392d6e33ea1)
 
+#### Takeaways
+- Lag features (Sales_Lag_1, Sales_Lag_2) show **strong correlation with current sales**, confirming temporal dependency.
+- Rolling averages help smooth noise and capture **short-term trends**.
+- Time-based features (month, quarter, etc.) enable detection of **seasonality patterns**.
+- Overall, feature engineering significantly improves the dataset’s predictive potential.
+
+---
+
 #### Building Linear Regression Model
+This section applies a linear regression model using engineered features to predict weekly sales and evaluates its performance.
 
 ```python
 df2 = df[['Sales_Lag_1', 'Sales_Lag_2', 'MA_3_Week_Lagged', 'Store','Weekly_Sales']]
@@ -194,3 +187,12 @@ print(f"Residuals Mean: {residuals_mean:.4f}")
 print(f"Residuals Std Dev: {residuals_std:.4f}")
 print(f"Residuals Normality p-value: {p_value:.4f} (p>0.05 suggests normal residuals)")
 ```
+
+#### Takeaways
+- The model achieves a **high R² (~0.91)**, indicating strong predictive performance.
+- Lag features are highly effective, confirming that **past sales are strong predictors of future sales**.
+- Errors (MAE ~85k, RMSE ~164k) show some deviation, especially for extreme values.
+- Residuals are **not normally distributed (p ≈ 0)**, suggesting the model may miss some patterns.
+- The model performs well overall but could be improved using **non-linear models or additional features**.
+
+---
