@@ -1,4 +1,4 @@
-# Walmart Sales Analysis
+# Walmart Sales Analysis | Sales Forecasting
 
 👉 [Click here](https://github.com/samuelnega-data/Walmart-Sales-ML-Model/blob/main/main.md) to access the entire project file or access the [python code here](https://github.com/samuelnega-data/Walmart-Sales-ML-Model/blob/main/main.py).
 
