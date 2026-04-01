@@ -187,3 +187,206 @@ df.describe()
   </tbody>
 </table>
 </div>
+```python
+df.shape```
+(6435, 8)
+```python
+df.isna().sum()```
+Store           0
+Date            0
+Weekly_Sales    0
+Holiday_Flag    0
+Temperature     0
+Fuel_Price      0
+CPI             0
+Unemployment    0
+dtype: int64
+```python
+df.dtypes```
+Store             int64
+Date             object
+Weekly_Sales    float64
+Holiday_Flag      int64
+Temperature     float64
+Fuel_Price      float64
+CPI             float64
+Unemployment    float64
+dtype: object
+```python
+weekly_sales = df.groupby('Date', as_index=False)['Weekly_Sales'].sum()
+
+plt.figure(figsize=(12,6))
+plt.plot(weekly_sales['Date'], weekly_sales['Weekly_Sales'], c = 'r')
+plt.title('Weekly Sales')
+plt.xlabel('Date')
+plt.ylabel('Sales Amount')
+```
+<Figure size 1200x600 with 1 Axes><img width="988" height="547" alt="image" src="https://github.com/user-attachments/assets/4af1ff90-1e8a-4639-b4ec-3b76b66fb222" />
+
+```python
+df2 = df.copy()
+
+df2 = df2.drop(columns='Date')
+
+corr_value = df2.corr().round(2)
+
+plt.figure(figsize=(12,5))
+plt.title('Correlation HeatMap')
+sns.heatmap(df2.corr(), cmap='Blues', annot=corr_value)
+```
+<Figure size 1200x500 with 2 Axes><img width="989" height="451" alt="image" src="https://github.com/user-attachments/assets/454ad5dd-2575-40bf-8a97-f133e5340c06" />
+
+```python
+hol_flag = df.groupby('Holiday_Flag').agg({
+    'Holiday_Flag': 'count',
+    'Weekly_Sales': 'sum'
+})
+
+total_sales = hol_flag['Weekly_Sales'].sum()
+total_sale_lines = len(df)
+
+hol_flag['Percentage_Cont'] = (hol_flag['Weekly_Sales'] / total_sales)*100
+hol_flag['Sale_Line_Percent'] = (hol_flag['Holiday_Flag'] / total_sale_lines)*100
+
+hol_flag
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Holiday_Flag</th>
+      <th>Weekly_Sales</th>
+      <th>Percentage_Cont</th>
+      <th>Sale_Line_Percent</th>
+    </tr>
+    <tr>
+      <th>Holiday_Flag</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>5985</td>
+      <td>6.231919e+09</td>
+      <td>92.499879</td>
+      <td>93.006993</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>450</td>
+      <td>5.052996e+08</td>
+      <td>7.500121</td>
+      <td>6.993007</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+```
+#### Feature Enginerring
+Lets build some additional features ontop of our dataset to enhance our correlations 
+```python
+df['Date'] = pd.to_datetime(df['Date'], format='%d-%m-%Y', errors='coerce')
+
+df['Year'] = df['Date'].dt.year
+df['Month'] = df['Date'].dt.month
+df['Day'] = df['Date'].dt.day
+df['Week'] = df['Date'].dt.isocalendar().week   
+df['Day_of_Week'] = df['Date'].dt.dayofweek     # 0=Monday, 6=Sunday
+df['Month_Name'] = df['Date'].dt.month   # January, February, etc.
+df['Quarter'] = df['Date'].dt.quarter           # 1,2,3,4
+df['Is_Weekend'] = (df['Date'].dt.dayofweek >= 5).astype(int)
+
+df['Sales_Lag_1'] = df['Weekly_Sales'].shift(1)
+df['Sales_Lag_2'] = df['Weekly_Sales'].shift(2)
+df['MA_3_Week_Lagged'] = df['Weekly_Sales'].shift(1).rolling(3).mean()
+df['Rolling_Std_3'] = df['Weekly_Sales'].rolling(3).std()
+
+plt.figure(figsize=(10,8))
+sns.heatmap(df.corr(), cmap='Blues', annot=True, fmt=".2f")
+plt.title("Correlation Heatmap")
+plt.show()
+```
+<Figure size 1000x800 with 2 Axes><img width="903" height="808" alt="image" src="https://github.com/user-attachments/assets/4bb16159-be72-4a89-95c3-e392d6e33ea1" />
+
+#### Building Linear Regression Model
+```python
+df2 = df[['Sales_Lag_1', 'Sales_Lag_2', 'MA_3_Week_Lagged', 'Store','Weekly_Sales']]
+df2.dropna(inplace=True)
+df2.shape
+
+X = df2.drop(columns=['Weekly_Sales'], inplace=False)
+y = df2['Weekly_Sales']
+
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
+
+model = LinearRegression()
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+
+errors = np.abs(y_pred - y_test)
+
+plt.figure(figsize=(12,6))
+plt.title('Predictions vs Actual with Error Coloring')
+plt.xlabel('Predictions')
+plt.ylabel('Actual')
+
+scatter = plt.scatter(y_pred, y_test, c=errors, cmap='coolwarm', alpha=0.7)
+
+cbar = plt.colorbar(scatter)
+cbar.set_label('Absolute Error')
+
+plt.show()
+```
+<Figure size 1200x600 with 2 Axes><img width="936" height="547" alt="image" src="https://github.com/user-attachments/assets/5d20e7dd-d802-4cb6-913b-bfa2fa05c360" />
+```python
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from scipy import stats
+import numpy as np
+
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+residuals = y_test - y_pred
+residuals_mean = np.mean(residuals)
+residuals_std = np.std(residuals)
+_, p_value = stats.normaltest(residuals)  
+
+print(f"R² Score: {r2:.4f}")
+print(f"Mean Absolute Error (MAE): {mae:.4f}")
+print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
+print(f"Residuals Mean: {residuals_mean:.4f}")
+print(f"Residuals Std Dev: {residuals_std:.4f}")
+print(f"Residuals Normality p-value: {p_value:.4f} (p>0.05 suggests normal residuals)")
+```
+R² Score: 0.9093
+Mean Absolute Error (MAE): 85069.3015
+Root Mean Squared Error (RMSE): 163912.6152
+Residuals Mean: 5368.4076
+Residuals Std Dev: 163824.6795
+Residuals Normality p-value: 0.0000 (p>0.05 suggests normal residuals)
