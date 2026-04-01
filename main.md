@@ -188,10 +188,12 @@ df.describe()
 </table>
 </div>
 ```python
-df.shape```
+df.shape
+```
 (6435, 8)
 ```python
-df.isna().sum()```
+df.isna().sum()
+```
 Store           0
 Date            0
 Weekly_Sales    0
