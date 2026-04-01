@@ -249,21 +249,7 @@ hol_flag['Percentage_Cont'] = (hol_flag['Weekly_Sales'] / total_sales)*100
 hol_flag['Sale_Line_Percent'] = (hol_flag['Holiday_Flag'] / total_sale_lines)*100
 
 hol_flag
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
+```
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -299,7 +285,6 @@ hol_flag
   </tbody>
 </table>
 </div>
-```
 #### Feature Enginerring
 Lets build some additional features ontop of our dataset to enhance our correlations 
 ```python
