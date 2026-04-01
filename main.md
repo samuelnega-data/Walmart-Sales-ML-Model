@@ -201,6 +201,15 @@ df.shape
 ```python
 df.isna().sum()
 ```
+Store           0
+Date            0
+Weekly_Sales    0
+Holiday_Flag    0
+Temperature     0
+Fuel_Price      0
+CPI             0
+Unemployment    0
+dtype: int64
 
 ```python
 df.dtypes
